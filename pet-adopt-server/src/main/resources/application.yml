@@ -1,0 +1,29 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/pet_adopt?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: 123456
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+pet-adopt:
+  # 所有上传图片直接平铺写入此目录，不创建分类子目录
+  upload-path: C:/Users/27743/Desktop/pets
+  file-url-prefix: /api/files/
