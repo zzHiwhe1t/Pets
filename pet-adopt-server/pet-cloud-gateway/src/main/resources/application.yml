@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pet-gateway
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        - id: pet-user-service
+          uri: lb://pet-user-service
+          predicates:
+            - Path=/api/auth/**,/api/users/**
+          filters:
+            - StripPrefix=1
+        - id: pet-pet-service
+          uri: lb://pet-pet-service
+          predicates:
+            - Path=/api/categories/**,/api/pets/**,/api/upload,/api/files/**
+          filters:
+            - StripPrefix=1
+        - id: pet-interaction-service
+          uri: lb://pet-interaction-service
+          predicates:
+            - Path=/api/applications/**,/api/chat/**
+          filters:
+            - StripPrefix=1
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:8081"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

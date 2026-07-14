@@ -1,103 +1,103 @@
-# 爪爪家园 · 萌宠领养寄养平台
+# 爪爪家园 · Spring Cloud 萌宠领养寄养平台
 
-一套本地可运行的前后端分离项目：Vue 2 + Element UI 前端、Spring Boot + MyBatis 后端、MySQL 8 数据库。图片通过后端从 `C:\Users\27743\Desktop\pets` 根目录读取和上传，所有新上传文件均使用时间戳与 UUID 命名并平铺存放。
+这是一个可在 Windows 本地直接运行的前后端分离微服务项目。前端继续使用 Vue 2 + Element UI，后端已由单体 Spring Boot 改造成 Spring Cloud 多模块架构，原有注册登录、宠物筛选与发布、图片上传、在线留言、领养申请和个人中心功能保持不变。
 
-## 目录说明
+## 技术栈
+
+- JDK 8、Maven 3.5+
+- Spring Boot 2.7.18、Spring Cloud 2021.0.9
+- Eureka、Spring Cloud Gateway、OpenFeign、MyBatis
+- MySQL 8.0（数据库 `pet_adopt`，账号 `root`，密码 `123456`）
+- Vue 2、Element UI、Vue Router、Axios
+
+## 项目结构
 
 ```text
 pets/
-├─ database/pet_adopt.sql       MySQL 一键初始化脚本
-├─ pet-adopt-server/            Spring Boot 后端
-├─ pet-adopt-web/               Vue 2 前端
-├─ resources/                   项目内置宠物图片（程序直接读取）
-├─ docs/image-prompts.md        8 大类及全部细分类配图文案
-└─ 时间戳_UUID.图片后缀        用户运行时上传的图片
+├─ database/pet_adopt.sql
+├─ pet-adopt-server/
+│  ├─ pet-cloud-common/          公共返回体、异常、网关身份上下文、内部 DTO
+│  ├─ pet-cloud-eureka/          服务注册中心，端口 8761
+│  ├─ pet-cloud-gateway/         API 网关与统一认证，端口 8080
+│  ├─ pet-user-service/          注册、登录、用户资料，端口 8082
+│  ├─ pet-pet-service/           分类、宠物、图片上传，端口 8083
+│  ├─ pet-interaction-service/   领养申请、聊天消息，端口 8084
+│  ├─ start-cloud.ps1            一键启动已打包的全部服务
+│  └─ stop-cloud.ps1             一键停止服务
+├─ pet-adopt-web/                Vue 2 前端
+├─ resources/                    内置宠物图片
+└─ docs/image-prompts.md         配图生成文案
 ```
 
-## 1. 准备环境
+详细模块边界和请求流程见 `pet-adopt-server/ARCHITECTURE.md`。
 
-- JDK 8（本项目编译目标为 Java 8；JDK 8～17 均可构建）
-- Maven 3.5+
-- Node.js 16 或 18（不建议使用过新的 Node.js 版本运行旧版 Vue CLI）
-- MySQL 8.0
-- Navicat（可选，也可使用 MySQL 命令行）
+## 1. 导入数据库
 
-确认 MySQL 本机端口为 `3306`，账号为 `root`，密码为 `123456`。如果本机配置不同，请同时修改 `pet-adopt-server/src/main/resources/application.yml`。
+1. 启动 MySQL 8.0，确认本机端口为 `3306`。
+2. 在 Navicat 中选择“运行 SQL 文件”。
+3. 执行 `database\pet_adopt.sql`。
 
-## 2. 导入数据库
+脚本会重建 `pet_adopt` 数据库。已有正式数据时不要直接重复执行。
 
-1. 打开 Navicat，连接本机 MySQL。
-2. 选择“运行 SQL 文件”。
-3. 选择 `database\pet_adopt.sql` 并运行。
-4. 脚本会自动删除并重建 `pet_adopt` 数据库，请勿在已有正式数据库上直接执行。
+测试账号：`alice / 123456`、`bob / 123456`、`admin / admin123`。
 
-测试账号：
-
-- 发布人：`alice / 123456`
-- 领养人：`bob / 123456`
-- 管理员预留账号：`admin / admin123`
-
-## 3. 放置图片素材
-
-项目自带的演示宠物图片统一放在 `\pets\resources`，不再在项目根目录重复保存。后端会同时读取该素材目录和固定上传目录。
-
-用户通过页面新上传的头像、宠物照片仍会按时间戳与 UUID 命名，直接写入 `\pets` 根目录；这些是运行数据，不是内置素材副本。后续依据 `docs\image-prompts.md` 补充内置演示图时，请保存到 `resources`。
-
-## 4. 启动后端
+## 2. 打包并启动微服务
 
 打开 PowerShell：
 
 ```powershell
-cd \pets\pet-adopt-server
-mvn spring-boot:run
+cd C:\Users\27743\Desktop\PROJECTS\pets\pet-adopt-server
+mvn clean package
+Set-ExecutionPolicy -Scope Process Bypass
+.\start-cloud.ps1
 ```
 
-看到 `Started PetAdoptApplication` 后，后端地址为 `http://localhost:8080/api`。上传接口会自动创建目标目录（若目录不存在），上传后图片可通过 `http://localhost:8080/api/files/文件名` 访问。
+启动顺序已经由脚本处理：Eureka → 用户服务/宠物服务/互动服务 → 网关。日志写入 `pet-adopt-server\logs`，进程号写入 `pet-adopt-server\.pids`。
 
-如需先打包：
+服务启动后：
+
+- 统一 API 地址：`http://localhost:8080/api`
+- Eureka 控制台：`http://localhost:8761`
+- 前端仍只访问 8080 网关，不需要修改任何接口地址
+
+停止全部服务：
 
 ```powershell
-mvn clean package -DskipTests
-java -jar target\pet-adopt-server-1.0.0.jar
+.\stop-cloud.ps1
 ```
 
-## 5. 启动前端
+如果希望在 IDE 中观察日志，也可以依次运行各模块的 Application 类：`EurekaServerApplication`、`UserServiceApplication`、`PetServiceApplication`、`InteractionServiceApplication`、`GatewayApplication`。
+
+## 3. 启动前端
 
 另开一个 PowerShell：
 
 ```powershell
-cd C:\Users\27743\Desktop\pets\pet-adopt-web
+cd C:\Users\27743\Desktop\PROJECTS\pets\pet-adopt-web
 npm install
 npm run serve
 ```
 
-浏览器访问 `http://localhost:8081`。开发代理会自动把 `/api` 请求转发到 `8080` 后端。
+浏览器访问 `http://localhost:8081`。Vue 开发代理仍将 `/api` 转发到 8080 网关。
 
-生产构建命令：
+## 4. 图片目录
 
-```powershell
-npm run build
-```
+- 内置演示图片：`C:\Users\27743\Desktop\PROJECTS\pets\resources`
+- 用户新上传图片：`C:\Users\27743\Desktop\PROJECTS\pets` 根目录
+- 访问地址：`http://localhost:8080/api/files/文件名`
 
-构建结果位于 `pet-adopt-web\dist`。
-
-## 6. 推荐体验顺序
-
-1. 使用 `alice / 123456` 登录，进入个人中心查看发布、收到的申请与消息。
-2. 退出后使用 `bob / 123456` 登录，筛选宠物、进入详情、联系主人并提交申请。
-3. 再次以 Alice 登录，在“收到的申请”中通过或驳回；通过后宠物自动变为“已领养”，同一宠物的其他待审核申请自动失效。
-4. 在“发布寄养”中上传多图，第一张会自动成为封面；图片会直接写入固定根目录。
+上传服务仍使用时间戳与 UUID 防重名，所有运行时图片平铺保存，不创建分类子文件夹。
 
 ## 常见问题
 
-- 页面提示网络连接失败：先确认 MySQL 与后端均已启动，且 8080 端口未被占用。
-- 登录提示用户名或密码错误：重新执行 SQL 初始化脚本，或确认没有修改测试账号数据。
-- 图片不显示：确认文件位于 `\pets` 根目录，而不是只放在 `resources` 中。
-- Maven 使用 JDK 版本不对：执行 `java -version` 与 `mvn -version`，确保 Maven 指向可用 JDK。
-- Node.js 运行 Vue CLI 报兼容错误：切换至 Node.js 18 LTS，删除 `node_modules` 后重新执行 `npm install`。
+- 网关提示认证服务不可用：确认 8761、8082 已启动，并在 Eureka 中看到 `PET-USER-SERVICE`。
+- 页面接口 503：确认三个业务服务均已注册到 Eureka，再启动或刷新网关。
+- 图片不显示：确认 `pet-pet-service/application.yml` 中的 `upload-path` 为当前项目根目录。
+- 端口被占用：停止旧的单体后端；新架构固定使用 8761、8080、8082、8083、8084。
+- Maven 版本不对：执行 `java -version` 与 `mvn -version`，确保 Maven 使用 JDK 8 或兼容 JDK。
 
-## 关键业务状态
+## 业务状态
 
 - 宠物：`AVAILABLE` 待领养、`IN_PROGRESS` 领养中、`ADOPTED` 已领养、`OFFLINE` 已下架。
 - 申请：`PENDING` 待审核、`APPROVED` 已通过、`REJECTED` 已驳回、`CANCELLED` 已失效。
-- 删除均为数据库逻辑删除；图片文件不会随宠物记录删除，避免误删用户本地素材。
+- 数据库表结构与原系统兼容，无需迁移已有数据。

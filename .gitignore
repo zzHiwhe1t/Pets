@@ -1,5 +1,7 @@
 # Build outputs and local dependency caches
-pet-adopt-server/target/
+pet-adopt-server/**/target/
+pet-adopt-server/logs/
+pet-adopt-server/.pids/
 pet-adopt-web/node_modules/
 pet-adopt-web/dist/
 .m2/
