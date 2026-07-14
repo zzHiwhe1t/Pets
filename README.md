@@ -46,7 +46,7 @@ pets/
 打开 PowerShell：
 
 ```powershell
-cd C:\Users\27743\Desktop\PROJECTS\pets\pet-adopt-server
+cd \pets\pet-adopt-server
 mvn clean package
 Set-ExecutionPolicy -Scope Process Bypass
 .\start-cloud.ps1
@@ -73,7 +73,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 另开一个 PowerShell：
 
 ```powershell
-cd C:\Users\27743\Desktop\PROJECTS\pets\pet-adopt-web
+cd \pets\pet-adopt-web
 npm install
 npm run serve
 ```
@@ -82,8 +82,8 @@ npm run serve
 
 ## 4. 图片目录
 
-- 内置演示图片：`C:\Users\27743\Desktop\PROJECTS\pets\resources`
-- 用户新上传图片：`C:\Users\27743\Desktop\PROJECTS\pets` 根目录
+- 内置演示图片：`\pets\resources`
+- 用户新上传图片：`\pets` 根目录
 - 访问地址：`http://localhost:8080/api/files/文件名`
 
 上传服务仍使用时间戳与 UUID 防重名，所有运行时图片平铺保存，不创建分类子文件夹。
